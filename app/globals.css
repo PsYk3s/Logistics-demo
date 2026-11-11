@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Dark theme (Tokyo Nights) — default */
+  --color-bg: 26 27 38;
+  --color-bg-panel: 31 35 53;
+  --color-bg-raised: 36 40 59;
+  --color-bg-border: 41 46 66;
+  --color-fg: 192 202 245;
+  --color-fg-muted: 86 95 137;
+  --color-fg-dim: 65 72 104;
+  --color-accent-blue: 122 162 247;
+  --color-accent-cyan: 125 207 255;
+  --color-accent-purple: 187 154 247;
+  --color-accent-magenta: 198 120 221;
+  --color-status-critical: 247 118 142;
+  --color-status-warning: 224 175 104;
+  --color-status-normal: 158 206 106;
+  --color-status-resolved: 86 95 137;
+  --color-status-info: 125 207 255;
+}
+
+.theme-light {
+  /* Light theme (white template) */
+  --color-bg: 255 255 255;
+  --color-bg-panel: 248 250 252;
+  --color-bg-raised: 241 245 249;
+  --color-bg-border: 226 232 240;
+  --color-fg: 15 23 42;
+  --color-fg-muted: 100 116 139;
+  --color-fg-dim: 148 163 184;
+  --color-accent-blue: 37 99 235;
+  --color-accent-cyan: 8 145 178;
+  --color-accent-purple: 124 58 237;
+  --color-accent-magenta: 190 24 93;
+  --color-status-critical: 220 38 38;
+  --color-status-warning: 180 83 9;
+  --color-status-normal: 22 163 74;
+  --color-status-resolved: 100 116 139;
+  --color-status-info: 8 145 178;
+}
+
+body {
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-fg));
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--color-bg-border));
+  border-radius: 9999px;
+}
+
+.card-stack {
+  scrollbar-gutter: stable;
+}
+

@@ -1,0 +1,3054 @@
+# Logistics Operations Dashboard
+
+## Next.js + Tailwind Mock Logistics Operations System
+
+---
+
+## 1. Project Objective
+
+Build a realistic logistics operations dashboard for showcase purposes.
+
+The application represents an active logistics control centre where staff monitor:
+
+* Deliveries
+* Truck movements
+* Driver activity
+* Operational events
+* Emergencies
+* Delays
+* Support tickets
+* Route progress
+* Staff activity
+
+The system is a simulation. It must behave as though it is receiving live operational information.
+
+The application should **not contain generic placeholder content** such as:
+
+* "Lorem ipsum"
+* "Test Event"
+* "Sample Driver"
+* "Truck 123"
+* "Example Ticket"
+* "Placeholder"
+* "TODO"
+* "Mock data"
+
+All simulated information should resemble legitimate logistics operations.
+
+Examples:
+
+* "Vehicle PBX-4821 delayed approaching N1 Midrand interchange"
+* "Delivery to East Rand Distribution Centre completed"
+* "Driver Thabo Mokoena reported tyre pressure warning"
+* "Emergency brake-temperature alert received from PBX-7194"
+* "Consignment PB-84721 expected 18 minutes late"
+
+---
+
+# 2. Technology
+
+## Frontend
+
+* Next.js
+* TypeScript
+* Tailwind CSS
+* React
+* Server/client components where appropriate
+
+## State
+
+Use a central simulation state rather than scattering state throughout UI components.
+
+Recommended structure:
+
+```text
+Simulation Engine
+        |
+        v
+Application State
+        |
+        +---- Events
+        +---- Trucks
+        +---- Drivers
+        +---- Tickets
+        +---- Staff
+        +---- Routes
+        |
+        v
+Dashboard Components
+```
+
+The simulation engine owns the changing world.
+
+UI components consume state and emit user actions.
+
+---
+
+# 3. Core Domain Classes
+
+The system should use actual TypeScript classes for the primary domain entities.
+
+Required classes:
+
+```text
+LogisticsEvent
+StaffMember
+TruckDriver
+Truck
+Ticket
+```
+
+Additional supporting classes are encouraged where they improve separation of responsibility.
+
+---
+
+# 4. Domain Model
+
+## LogisticsEvent
+
+Represents something happening within the logistics operation.
+
+Possible event types:
+
+```text
+DELIVERY
+DEPARTURE
+ARRIVAL
+DELAY
+BREAKDOWN
+EMERGENCY
+ROUTE_CHANGE
+DRIVER_ALERT
+VEHICLE_ALERT
+CUSTOMER_UPDATE
+TICKET_CREATED
+TICKET_RESOLVED
+```
+
+Properties:
+
+```text
+id
+type
+title
+description
+timestamp
+status
+severity
+truckId
+driverId
+location
+estimatedResolution
+```
+
+Event severity:
+
+```text
+NORMAL
+WARNING
+CRITICAL
+```
+
+Event status:
+
+```text
+ACTIVE
+MONITORING
+RESOLVED
+ESCALATED
+```
+
+### Behaviour
+
+The event should be able to:
+
+```text
+resolve()
+escalate()
+updateStatus()
+increaseSeverity()
+decreaseSeverity()
+```
+
+---
+
+# 5. StaffMember
+
+Represents a logged-in operations employee.
+
+Properties:
+
+```text
+id
+name
+role
+department
+avatar
+status
+lastActive
+```
+
+Roles:
+
+```text
+DISPATCHER
+FLEET_MANAGER
+OPERATIONS_MANAGER
+SUPERVISOR
+CONTROL_ROOM
+```
+
+Statuses:
+
+```text
+ONLINE
+AWAY
+BUSY
+OFFLINE
+```
+
+Behaviour:
+
+```text
+login()
+logout()
+setStatus()
+assignEvent()
+assignTicket()
+```
+
+The dashboard should display the currently logged-in staff member.
+
+Example:
+
+```text
+Sarah Jacobs
+Fleet Operations
+Online
+```
+
+---
+
+# 6. TruckDriver
+
+Represents a driver currently working in the logistics network.
+
+Properties:
+
+```text
+id
+name
+employeeNumber
+phone
+truckId
+status
+currentLocation
+currentRoute
+shiftStart
+shiftEnd
+deliveryCount
+```
+
+Driver statuses:
+
+```text
+ON_ROUTE
+LOADING
+UNLOADING
+RESTING
+DELAYED
+EMERGENCY
+OFF_DUTY
+```
+
+Behaviour:
+
+```text
+startRoute()
+pauseRoute()
+completeDelivery()
+reportIncident()
+changeStatus()
+```
+
+---
+
+# 7. Truck
+
+The truck entity should be separate from the driver.
+
+Properties:
+
+```text
+id
+registration
+fleetNumber
+model
+driverId
+status
+location
+fuelLevel
+temperature
+odometer
+nextService
+```
+
+Truck statuses:
+
+```text
+AVAILABLE
+ON_ROUTE
+LOADING
+UNLOADING
+DELAYED
+MAINTENANCE
+BREAKDOWN
+EMERGENCY
+```
+
+This separation is important because a driver and vehicle can experience different states.
+
+Example:
+
+```text
+Truck: PBX-4821
+Driver: Thabo Mokoena
+
+Truck status: ON_ROUTE
+Driver status: DELAYED
+```
+
+---
+
+# 8. Ticket
+
+Represents an operational issue requiring staff attention.
+
+Properties:
+
+```text
+id
+ticketNumber
+title
+description
+priority
+status
+createdAt
+updatedAt
+assignedTo
+truckId
+driverId
+eventId
+```
+
+Priority:
+
+```text
+LOW
+MEDIUM
+HIGH
+URGENT
+```
+
+Status:
+
+```text
+OPEN
+IN_PROGRESS
+WAITING
+RESOLVED
+CLOSED
+```
+
+Behaviour:
+
+```text
+assign()
+startWork()
+putOnHold()
+resolve()
+close()
+reopen()
+changePriority()
+```
+
+---
+
+# 9. Status Visual System
+
+The UI should communicate operational importance immediately.
+
+## Critical / Emergency
+
+Emergency events use:
+
+```text
+red indicator
+```
+
+The indicator should pulse/flash continuously.
+
+Example:
+
+```text
+● EMERGENCY
+```
+
+The animation should be implemented using Tailwind animation utilities or a custom Tailwind animation.
+
+Critical cards should visually stand out without becoming visually chaotic.
+
+---
+
+## Warning / Potential Late
+
+Potential delays use:
+
+```text
+orange indicator
+```
+
+Examples:
+
+```text
+18 min behind schedule
+Traffic delay
+Estimated arrival slipping
+Driver approaching shift limit
+```
+
+Orange means:
+
+> Attention required, but not an emergency.
+
+---
+
+## Normal
+
+Normal operational activity should use a neutral/positive visual state.
+
+Examples:
+
+```text
+Delivery completed
+Truck departed
+Driver arrived
+Route progressing normally
+```
+
+---
+
+## Resolved
+
+Resolved events should become visually subdued.
+
+The information remains available for operational history but should no longer dominate the dashboard.
+
+---
+
+# 10. Dashboard Layout
+
+Recommended structure:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ LOGISTICS CONTROL CENTRE              Sarah Jacobs ● ONLINE │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│ ACTIVE │ DELAYED │ EMERGENCIES │ TRUCKS │ OPEN TICKETS       │
+│   18   │    4    │      1      │   27   │       7            │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│ ACTIVE OPERATIONS                                            │
+│                                                              │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ ● EMERGENCY                                               │ │
+│ │ Brake temperature warning — PBX-7194                     │ │
+│ │ Driver: Sipho Dlamini                                    │ │
+│ │ Location: N3 Heidelberg                                  │ │
+│ └──────────────────────────────────────────────────────────┘ │
+│                                                              │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ ● POTENTIAL DELAY                                         │ │
+│ │ East Rand delivery running 22 minutes behind schedule    │ │
+│ └──────────────────────────────────────────────────────────┘ │
+│                                                              │
+├───────────────────────────────┬──────────────────────────────┤
+│ TRUCK ACTIVITY                │ OPEN TICKETS                 │
+│                               │                              │
+│ PBX-4821  ON ROUTE            │ #TK-1842  HIGH              │
+│ PBX-7194  EMERGENCY           │ #TK-1841  MEDIUM            │
+│ PBX-6317  LOADING             │ #TK-1839  URGENT            │
+│                               │                              │
+└───────────────────────────────┴──────────────────────────────┘
+```
+
+The actual design should be more polished than this wireframe.
+
+---
+
+# 11. Filesystem
+
+Recommended filesystem:
+
+```text
+logistics-dashboard/
+│
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   │
+│   ├── dashboard/
+│   │   └── page.tsx
+│   │
+│   └── api/
+│       └── simulation/
+│           └── route.ts
+│
+├── components/
+│   ├── dashboard/
+│   │   ├── Dashboard.tsx
+│   │   ├── DashboardHeader.tsx
+│   │   ├── OperationsSummary.tsx
+│   │   ├── EventFeed.tsx
+│   │   ├── EventCard.tsx
+│   │   ├── EventStatus.tsx
+│   │   ├── TruckActivity.tsx
+│   │   ├── TruckCard.tsx
+│   │   ├── DriverActivity.tsx
+│   │   ├── DriverCard.tsx
+│   │   ├── TicketPanel.tsx
+│   │   ├── TicketCard.tsx
+│   │   ├── ActivityTimeline.tsx
+│   │   └── LiveIndicator.tsx
+│   │
+│   ├── layout/
+│   │   ├── Sidebar.tsx
+│   │   ├── TopBar.tsx
+│   │   └── StatusBar.tsx
+│   │
+│   └── ui/
+│       ├── StatusDot.tsx
+│       ├── Badge.tsx
+│       ├── Avatar.tsx
+│       ├── ProgressBar.tsx
+│       └── IconButton.tsx
+│
+├── domain/
+│   ├── LogisticsEvent.ts
+│   ├── StaffMember.ts
+│   ├── TruckDriver.ts
+│   ├── Truck.ts
+│   └── Ticket.ts
+│
+├── simulation/
+│   ├── SimulationEngine.ts
+│   ├── SimulationState.ts
+│   ├── SimulationClock.ts
+│   ├── EventGenerator.ts
+│   ├── EventProcessor.ts
+│   ├── StateMutator.ts
+│   └── scenarios/
+│       ├── emergencyScenario.ts
+│       ├── delayScenario.ts
+│       ├── deliveryScenario.ts
+│       └── vehicleScenario.ts
+│
+├── data/
+│   ├── drivers.ts
+│   ├── trucks.ts
+│   ├── staff.ts
+│   ├── routes.ts
+│   └── locations.ts
+│
+├── state/
+│   ├── DashboardProvider.tsx
+│   ├── dashboardReducer.ts
+│   └── selectors.ts
+│
+├── lib/
+│   ├── ids.ts
+│   ├── dates.ts
+│   ├── formatters.ts
+│   └── random.ts
+│
+├── types/
+│   ├── events.ts
+│   ├── logistics.ts
+│   └── simulation.ts
+│
+├── public/
+│   ├── avatars/
+│   └── vehicles/
+│
+├── tailwind.config.ts
+├── tsconfig.json
+├── next.config.ts
+├── package.json
+└── README.md
+```
+
+---
+
+# 12. File Responsibilities
+
+## app/layout.tsx
+
+### Purpose
+
+Global application shell.
+
+### Functions
+
+```text
+RootLayout()
+```
+
+### Output
+
+Returns the HTML/document structure and global providers.
+
+### Pseudocode
+
+```text
+FUNCTION RootLayout(children):
+    configure HTML language
+    load global CSS
+    render application providers
+    render children
+END
+```
+
+---
+
+# 13. app/page.tsx
+
+### Purpose
+
+Application entry point.
+
+### Functions
+
+```text
+HomePage()
+```
+
+### Output
+
+Redirects or renders the dashboard.
+
+### Pseudocode
+
+```text
+FUNCTION HomePage:
+    render dashboard
+END
+```
+
+---
+
+# 14. app/dashboard/page.tsx
+
+### Purpose
+
+Dashboard route.
+
+### Functions
+
+```text
+DashboardPage()
+```
+
+### Output
+
+Complete logistics control-centre interface.
+
+### Pseudocode
+
+```text
+FUNCTION DashboardPage:
+    render Dashboard
+END
+```
+
+---
+
+# 15. domain/LogisticsEvent.ts
+
+### Purpose
+
+Core event domain class.
+
+### Functions
+
+```text
+constructor()
+resolve()
+escalate()
+updateStatus()
+increaseSeverity()
+decreaseSeverity()
+```
+
+### Output
+
+A fully typed LogisticsEvent instance.
+
+### Pseudocode
+
+```text
+CLASS LogisticsEvent:
+
+    CONSTRUCTOR(eventData):
+        assign event properties
+        calculate initial state
+
+    resolve():
+        status = RESOLVED
+        resolvedAt = current time
+
+    escalate():
+        severity = CRITICAL
+        status = ESCALATED
+
+    updateStatus(newStatus):
+        validate status
+        status = newStatus
+
+    increaseSeverity():
+        change NORMAL -> WARNING
+        change WARNING -> CRITICAL
+
+    decreaseSeverity():
+        change CRITICAL -> WARNING
+        change WARNING -> NORMAL
+END
+```
+
+---
+
+# 16. domain/StaffMember.ts
+
+### Purpose
+
+Represents logged-in operations personnel.
+
+### Functions
+
+```text
+constructor()
+login()
+logout()
+setStatus()
+assignEvent()
+assignTicket()
+```
+
+### Output
+
+StaffMember object representing a real operational user.
+
+### Pseudocode
+
+```text
+CLASS StaffMember:
+
+    login():
+        status = ONLINE
+        lastActive = current time
+
+    logout():
+        status = OFFLINE
+
+    setStatus(status):
+        validate status
+        update status
+        update lastActive
+
+    assignEvent(event):
+        return event assigned to this staff member
+
+    assignTicket(ticket):
+        return ticket assigned to this staff member
+END
+```
+
+---
+
+# 17. domain/TruckDriver.ts
+
+### Purpose
+
+Driver domain logic.
+
+### Functions
+
+```text
+constructor()
+startRoute()
+pauseRoute()
+completeDelivery()
+reportIncident()
+changeStatus()
+```
+
+### Output
+
+Updated driver state.
+
+### Pseudocode
+
+```text
+CLASS TruckDriver:
+
+    startRoute(route):
+        currentRoute = route
+        status = ON_ROUTE
+
+    pauseRoute():
+        status = RESTING
+
+    completeDelivery():
+        deliveryCount += 1
+        currentRoute = null
+        status = ON_ROUTE
+
+    reportIncident(event):
+        status = EMERGENCY
+        return event
+
+    changeStatus(status):
+        validate status
+        update status
+END
+```
+
+---
+
+# 18. domain/Truck.ts
+
+### Purpose
+
+Vehicle state and behaviour.
+
+### Functions
+
+```text
+constructor()
+startRoute()
+arrive()
+startLoading()
+startUnloading()
+reportFault()
+updateTelemetry()
+```
+
+### Output
+
+Updated Truck object.
+
+### Pseudocode
+
+```text
+CLASS Truck:
+
+    startRoute(route):
+        status = ON_ROUTE
+        currentRoute = route
+
+    arrive(location):
+        currentLocation = location
+        status = UNLOADING
+
+    startLoading():
+        status = LOADING
+
+    startUnloading():
+        status = UNLOADING
+
+    reportFault(severity):
+        IF severity is critical:
+            status = EMERGENCY
+        ELSE:
+            status = MAINTENANCE
+
+    updateTelemetry(data):
+        update fuel
+        update temperature
+        update odometer
+        update location
+END
+```
+
+---
+
+# 19. domain/Ticket.ts
+
+### Purpose
+
+Operational issue management.
+
+### Functions
+
+```text
+constructor()
+assign()
+startWork()
+putOnHold()
+resolve()
+close()
+reopen()
+changePriority()
+```
+
+### Output
+
+Updated Ticket object.
+
+### Pseudocode
+
+```text
+CLASS Ticket:
+
+    assign(staff):
+        assignedTo = staff.id
+        status = IN_PROGRESS
+
+    startWork():
+        status = IN_PROGRESS
+
+    putOnHold():
+        status = WAITING
+
+    resolve():
+        status = RESOLVED
+        updatedAt = current time
+
+    close():
+        status = CLOSED
+
+    reopen():
+        status = OPEN
+
+    changePriority(priority):
+        validate priority
+        update priority
+END
+```
+
+---
+
+# 20. simulation/SimulationEngine.ts
+
+### Purpose
+
+The heart of the application.
+
+This class makes the dashboard feel alive.
+
+### Functions
+
+```text
+start()
+stop()
+tick()
+generateActivity()
+processActivity()
+```
+
+### Output
+
+Continuously changing SimulationState.
+
+### Pseudocode
+
+```text
+CLASS SimulationEngine:
+
+    start():
+        initialise simulation
+        start simulation clock
+        begin periodic tick
+
+    stop():
+        stop simulation clock
+
+    tick():
+        determine elapsed simulation time
+        select possible activity
+        generate activity
+        apply activity
+        notify state subscribers
+
+    generateActivity():
+        choose realistic event based on current state
+
+    processActivity(activity):
+        mutate relevant domain object
+        create event if required
+        update tickets when required
+        update dashboard state
+END
+```
+
+---
+
+# 21. simulation/SimulationState.ts
+
+### Purpose
+
+Central representation of the simulated logistics environment.
+
+### Functions
+
+```text
+createInitialState()
+cloneState()
+calculateSummary()
+```
+
+### Output
+
+```text
+SimulationState
+```
+
+Containing:
+
+```text
+events
+drivers
+trucks
+tickets
+staff
+routes
+currentTime
+lastActivity
+```
+
+### Pseudocode
+
+```text
+FUNCTION createInitialState:
+
+    create realistic drivers
+    create realistic trucks
+    create realistic staff
+    create routes
+    create initial active events
+    create initial tickets
+
+    return SimulationState
+END
+```
+
+The initial state must intentionally contain a mixture of:
+
+```text
+normal events
+completed events
+warnings
+potential delays
+at least occasional critical activity
+open tickets
+active routes
+loading operations
+```
+
+The initial dashboard should therefore look operational immediately.
+
+---
+
+# 22. simulation/SimulationClock.ts
+
+### Purpose
+
+Controls simulation timing.
+
+### Functions
+
+```text
+start()
+stop()
+subscribe()
+unsubscribe()
+getCurrentTime()
+```
+
+### Output
+
+A continuously advancing simulated clock.
+
+### Pseudocode
+
+```text
+start():
+    every simulation interval:
+        advance simulation time
+        notify subscribers
+
+stop():
+    clear interval
+```
+
+The simulation interval should be configurable.
+
+Example:
+
+```text
+SIMULATION_INTERVAL = 4000ms
+```
+
+The dashboard should not change every second in a chaotic way.
+
+A 3–6 second interval is more believable.
+
+---
+
+# 23. simulation/EventGenerator.ts
+
+### Purpose
+
+Creates realistic operational events.
+
+### Functions
+
+```text
+generate()
+generateDelay()
+generateDelivery()
+generateVehicleAlert()
+generateDriverAlert()
+generateEmergency()
+generateTicket()
+```
+
+### Output
+
+A new domain event.
+
+### Pseudocode
+
+```text
+generate():
+
+    inspect current simulation state
+
+    choose event category based on weighted probabilities
+
+    IF emergency probability:
+        generate emergency
+
+    ELSE IF delay probability:
+        generate delay
+
+    ELSE IF delivery probability:
+        generate delivery
+
+    ELSE IF vehicle activity:
+        generate vehicle event
+
+    ELSE:
+        generate normal operational activity
+END
+```
+
+Use weighted randomness rather than completely random randomness.
+
+Emergency events should be rare.
+
+Normal events should dominate.
+
+---
+
+# 24. simulation/EventProcessor.ts
+
+### Purpose
+
+Transforms generated events into state changes.
+
+### Functions
+
+```text
+processEvent()
+processEmergency()
+processDelay()
+processDelivery()
+processVehicleEvent()
+processTicketEvent()
+```
+
+### Output
+
+Updated SimulationState.
+
+### Pseudocode
+
+```text
+processEvent(event):
+
+    determine event type
+
+    CASE EMERGENCY:
+        mark truck emergency
+        mark driver emergency
+        create urgent ticket
+
+    CASE DELAY:
+        mark route delayed
+        calculate new ETA
+
+    CASE DELIVERY:
+        update route progress
+        update driver
+        potentially complete delivery
+
+    CASE VEHICLE_ALERT:
+        update truck telemetry
+
+    CASE TICKET_EVENT:
+        update ticket state
+
+    append event to event history
+END
+```
+
+---
+
+# 25. simulation/StateMutator.ts
+
+### Purpose
+
+Provides controlled state modifications.
+
+### Functions
+
+```text
+updateTruck()
+updateDriver()
+updateEvent()
+updateTicket()
+addEvent()
+addTicket()
+```
+
+### Output
+
+Immutable updated state.
+
+### Pseudocode
+
+```text
+FUNCTION updateTruck(state, truckId, changes):
+
+    locate truck
+    create updated truck
+    return new state
+END
+```
+
+This keeps direct mutation out of React components.
+
+---
+
+# 26. simulation/scenarios/
+
+Scenario files represent realistic chains of activity rather than isolated random events.
+
+## emergencyScenario.ts
+
+Example scenario:
+
+```text
+Truck travelling normally
+        ↓
+Brake temperature rises
+        ↓
+Vehicle warning generated
+        ↓
+Temperature crosses threshold
+        ↓
+Emergency event generated
+        ↓
+Driver changes status
+        ↓
+Truck changes status
+        ↓
+Urgent ticket created
+        ↓
+Dispatcher assigned
+        ↓
+Recovery vehicle requested
+        ↓
+Emergency resolved
+```
+
+---
+
+## delayScenario.ts
+
+Example:
+
+```text
+Truck approaching delivery
+        ↓
+Traffic congestion detected
+        ↓
+ETA increases
+        ↓
+Event becomes WARNING
+        ↓
+Orange indicator appears
+        ↓
+Driver reports updated ETA
+        ↓
+Truck catches up
+        ↓
+Warning resolves
+```
+
+---
+
+## deliveryScenario.ts
+
+Example:
+
+```text
+Truck leaves depot
+        ↓
+Route active
+        ↓
+Approaching customer
+        ↓
+Arrived
+        ↓
+Unloading
+        ↓
+Delivery completed
+        ↓
+Route closed
+```
+
+---
+
+## vehicleScenario.ts
+
+Example:
+
+```text
+Truck operating normally
+        ↓
+Fuel decreases
+        ↓
+Temperature changes
+        ↓
+Maintenance threshold approaches
+        ↓
+Maintenance ticket created
+```
+
+---
+
+# 27. data/
+
+The data files contain realistic starting entities.
+
+## data/drivers.ts
+
+Functions:
+
+```text
+createDrivers()
+```
+
+Output:
+
+```text
+TruckDriver[]
+```
+
+Example records should resemble:
+
+```text
+Thabo Mokoena
+Sipho Dlamini
+Lerato Nkosi
+Johan van der Merwe
+Mandla Khumalo
+```
+
+---
+
+## data/trucks.ts
+
+Functions:
+
+```text
+createTrucks()
+```
+
+Output:
+
+```text
+Truck[]
+```
+
+Use realistic South African fleet registrations and fleet numbers.
+
+---
+
+## data/staff.ts
+
+Functions:
+
+```text
+createStaff()
+getCurrentStaff()
+```
+
+Output:
+
+```text
+StaffMember[]
+StaffMember
+```
+
+---
+
+## data/routes.ts
+
+Functions:
+
+```text
+createRoutes()
+```
+
+Output:
+
+```text
+Route[]
+```
+
+Routes should resemble actual logistics corridors.
+
+Examples:
+
+```text
+Johannesburg → Pretoria
+Johannesburg → East Rand
+Johannesburg → Midrand
+Johannesburg → Vereeniging
+Pretoria → Rustenburg
+Johannesburg → Durban
+```
+
+---
+
+## data/locations.ts
+
+Functions:
+
+```text
+getLocations()
+getRandomLocation()
+```
+
+Output:
+
+```text
+Location[]
+Location
+```
+
+Locations should represent:
+
+```text
+depots
+distribution centres
+highways
+interchanges
+customer facilities
+fuel stations
+service centres
+```
+
+---
+
+# 28. state/DashboardProvider.tsx
+
+### Purpose
+
+React interface to the simulation engine.
+
+### Functions
+
+```text
+DashboardProvider()
+useDashboard()
+```
+
+### Output
+
+React context containing:
+
+```text
+events
+trucks
+drivers
+tickets
+staff
+summary
+simulationTime
+lastActivity
+```
+
+### Pseudocode
+
+```text
+DashboardProvider:
+
+    create SimulationEngine
+
+    initialise state
+
+    subscribe to simulation changes
+
+    whenever simulation changes:
+        update React state
+
+    provide state through context
+
+    cleanup simulation on unmount
+END
+```
+
+---
+
+# 29. state/dashboardReducer.ts
+
+### Purpose
+
+Handles UI state transitions.
+
+### Functions
+
+```text
+dashboardReducer()
+```
+
+### Output
+
+Updated dashboard state.
+
+### Pseudocode
+
+```text
+dashboardReducer(state, action):
+
+    SWITCH action.type:
+
+        SIMULATION_UPDATED:
+            return action.state
+
+        EVENT_RESOLVED:
+            update event
+
+        TICKET_ASSIGNED:
+            update ticket
+
+        TICKET_RESOLVED:
+            update ticket
+
+        FILTER_CHANGED:
+            update filters
+
+        RETURN updated state
+END
+```
+
+---
+
+# 30. state/selectors.ts
+
+### Purpose
+
+Prevent components from implementing business logic.
+
+### Functions
+
+```text
+getActiveEvents()
+getCriticalEvents()
+getWarningEvents()
+getOpenTickets()
+getActiveTrucks()
+getDelayedTrucks()
+getOnlineStaff()
+getDashboardSummary()
+```
+
+### Output
+
+Filtered or calculated dashboard data.
+
+---
+
+# 31. components/dashboard/Dashboard.tsx
+
+### Purpose
+
+Main dashboard composition.
+
+### Functions
+
+```text
+Dashboard()
+```
+
+### Output
+
+Full operational dashboard.
+
+### Pseudocode
+
+```text
+Dashboard:
+
+    read dashboard state
+
+    render:
+        DashboardHeader
+        OperationsSummary
+        EventFeed
+        TruckActivity
+        DriverActivity
+        TicketPanel
+        ActivityTimeline
+END
+```
+
+The Dashboard component should compose components rather than contain business logic.
+
+---
+
+# 32. components/dashboard/DashboardHeader.tsx
+
+### Purpose
+
+Top-level operational identity.
+
+Displays:
+
+```text
+LOGISTICS CONTROL CENTRE
+current time
+simulation/live indicator
+logged-in staff member
+staff status
+```
+
+Functions:
+
+```text
+DashboardHeader()
+```
+
+---
+
+# 33. components/dashboard/OperationsSummary.tsx
+
+### Purpose
+
+High-level operational counters.
+
+Displays:
+
+```text
+Active Operations
+Potential Delays
+Emergencies
+Trucks On Route
+Open Tickets
+Completed Deliveries
+```
+
+Functions:
+
+```text
+OperationsSummary()
+```
+
+Output:
+
+Summary cards populated from selectors.
+
+---
+
+# 34. components/dashboard/EventFeed.tsx
+
+### Purpose
+
+Live stream of operational events.
+
+Functions:
+
+```text
+EventFeed()
+filterEvents()
+sortEvents()
+```
+
+### Output
+
+Ordered EventCard components.
+
+Newest events should appear at the top.
+
+New events should enter with a subtle visual animation.
+
+---
+
+# 35. components/dashboard/EventCard.tsx
+
+### Purpose
+
+Primary event presentation component.
+
+Functions:
+
+```text
+EventCard()
+getSeverityStyle()
+getStatusStyle()
+formatEventTime()
+```
+
+### Output
+
+A complete operational event card.
+
+Example:
+
+```text
+● EMERGENCY
+
+Brake temperature warning
+PBX-7194
+
+N3 Heidelberg
+Sipho Dlamini
+
+Temperature exceeded operating threshold
+2 minutes ago
+
+URGENT RESPONSE
+```
+
+The component should determine presentation from event state.
+
+It should not hardcode individual event identities.
+
+---
+
+# 36. components/dashboard/EventStatus.tsx
+
+### Purpose
+
+Standardise event status presentation.
+
+Functions:
+
+```text
+EventStatus()
+```
+
+### Output
+
+Status indicator and label.
+
+Rules:
+
+```text
+CRITICAL -> red pulsing dot
+WARNING  -> orange dot
+NORMAL   -> neutral/positive dot
+RESOLVED -> muted dot
+```
+
+---
+
+# 37. components/dashboard/TruckActivity.tsx
+
+### Purpose
+
+Live fleet overview.
+
+Functions:
+
+```text
+TruckActivity()
+```
+
+Output:
+
+A collection of TruckCards.
+
+Prioritise:
+
+```text
+Emergency
+Delayed
+On Route
+Loading
+Available
+```
+
+in that order.
+
+---
+
+# 38. components/dashboard/TruckCard.tsx
+
+### Purpose
+
+Individual vehicle status.
+
+Displays:
+
+```text
+registration
+fleet number
+driver
+location
+status
+fuel
+temperature
+ETA
+```
+
+The UI should change automatically as simulation state changes.
+
+---
+
+# 39. components/dashboard/DriverActivity.tsx
+
+### Purpose
+
+Live driver activity.
+
+Displays:
+
+```text
+driver
+status
+truck
+location
+route
+shift
+```
+
+Drivers in emergency or delayed states should be promoted visually.
+
+---
+
+# 40. components/dashboard/DriverCard.tsx
+
+### Purpose
+
+Individual driver presentation.
+
+Functions:
+
+```text
+DriverCard()
+getDriverStatusStyle()
+```
+
+---
+
+# 41. components/dashboard/TicketPanel.tsx
+
+### Purpose
+
+Operational issue queue.
+
+Displays tickets ordered by:
+
+```text
+URGENT
+HIGH
+MEDIUM
+LOW
+```
+
+and then by age.
+
+Functions:
+
+```text
+TicketPanel()
+sortTickets()
+```
+
+---
+
+# 42. components/dashboard/TicketCard.tsx
+
+### Purpose
+
+Individual ticket.
+
+Displays:
+
+```text
+ticket number
+title
+priority
+status
+assigned staff member
+linked truck
+created time
+```
+
+Urgent tickets should be visually prominent.
+
+---
+
+# 43. components/dashboard/ActivityTimeline.tsx
+
+### Purpose
+
+Human-readable operational history.
+
+Example:
+
+```text
+13:24
+PBX-7194 reported brake temperature warning
+
+13:22
+Driver Sipho Dlamini departed Heidelberg depot
+
+13:19
+Delivery PB-84721 completed at East Rand Distribution Centre
+
+13:16
+Ticket TK-1841 assigned to Sarah Jacobs
+```
+
+This makes the dashboard feel like an actual operations system rather than a collection of cards.
+
+---
+
+# 44. components/dashboard/LiveIndicator.tsx
+
+### Purpose
+
+Communicate that the system is actively receiving simulation updates.
+
+Display:
+
+```text
+● LIVE
+```
+
+The indicator should subtly pulse.
+
+It should update a "last update" timestamp.
+
+---
+
+# 45. components/layout/Sidebar.tsx
+
+### Purpose
+
+Primary navigation.
+
+Navigation:
+
+```text
+Overview
+Live Operations
+Fleet
+Drivers
+Tickets
+Events
+Reports
+```
+
+For showcase purposes, these sections can initially route to the dashboard or display their respective dashboard view if implemented.
+
+Do not create dead navigation purely for visual decoration.
+
+---
+
+# 46. components/layout/TopBar.tsx
+
+### Purpose
+
+Global operational controls.
+
+Display:
+
+```text
+current time
+notifications
+logged-in staff
+system status
+```
+
+---
+
+# 47. components/layout/StatusBar.tsx
+
+### Purpose
+
+Bottom-level system status.
+
+Example:
+
+```text
+Simulation Active
+Last update 4 seconds ago
+27 vehicles monitored
+18 active operations
+```
+
+---
+
+# 48. components/ui/
+
+These components must remain generic.
+
+## StatusDot.tsx
+
+Functions:
+
+```text
+StatusDot()
+```
+
+Output:
+
+Animated or static status dot.
+
+---
+
+## Badge.tsx
+
+Functions:
+
+```text
+Badge()
+```
+
+Output:
+
+Reusable status/priority badge.
+
+---
+
+## Avatar.tsx
+
+Functions:
+
+```text
+Avatar()
+```
+
+Output:
+
+Staff or driver avatar.
+
+---
+
+## ProgressBar.tsx
+
+Functions:
+
+```text
+ProgressBar()
+```
+
+Output:
+
+Progress visualisation.
+
+Useful for:
+
+```text
+route completion
+fuel
+delivery progress
+```
+
+---
+
+## IconButton.tsx
+
+Functions:
+
+```text
+IconButton()
+```
+
+Output:
+
+Accessible icon-based action.
+
+---
+
+# 49. lib/
+
+## lib/random.ts
+
+Centralise randomness.
+
+Functions:
+
+```text
+randomInt()
+randomFloat()
+randomItem()
+weightedRandom()
+chance()
+```
+
+The simulation should use these functions rather than Math.random() throughout the codebase.
+
+This makes simulation behaviour easier to control.
+
+---
+
+## lib/ids.ts
+
+Functions:
+
+```text
+createEventId()
+createTicketId()
+createDriverId()
+createTruckId()
+```
+
+Output:
+
+Stable unique identifiers.
+
+Ticket identifiers should look realistic:
+
+```text
+TK-1842
+TK-1843
+TK-1844
+```
+
+---
+
+## lib/dates.ts
+
+Functions:
+
+```text
+formatRelativeTime()
+formatTime()
+formatDateTime()
+addMinutes()
+subtractMinutes()
+```
+
+Output:
+
+Human-readable operational timestamps.
+
+---
+
+## lib/formatters.ts
+
+Functions:
+
+```text
+formatETA()
+formatDistance()
+formatFuel()
+formatTemperature()
+formatDuration()
+```
+
+Output:
+
+Consistent dashboard formatting.
+
+---
+
+# 50. Simulation Behaviour
+
+The simulation should not simply change random values.
+
+It should model cause and effect.
+
+For example:
+
+```text
+Traffic event
+    ↓
+Truck speed decreases
+    ↓
+ETA increases
+    ↓
+Route becomes WARNING
+    ↓
+Orange indicator appears
+    ↓
+Delay event added
+    ↓
+Ticket may be created
+```
+
+Similarly:
+
+```text
+Vehicle telemetry anomaly
+    ↓
+Warning
+    ↓
+Critical threshold
+    ↓
+Emergency
+    ↓
+Driver status changes
+    ↓
+Truck status changes
+    ↓
+Urgent ticket
+    ↓
+Dispatcher assignment
+```
+
+This creates the perception of a living system.
+
+---
+
+# 51. Event Probability Model
+
+Recommended approximate distribution per simulation cycle:
+
+```text
+Normal operational activity     50%
+Delivery activity               15%
+Vehicle activity                10%
+Traffic/delay activity           10%
+Driver activity                  8%
+Ticket activity                  5%
+Emergency activity               2%
+```
+
+These are guidelines rather than fixed values.
+
+Emergency events should remain uncommon.
+
+The system should never feel like it is intentionally trying to create emergencies.
+
+---
+
+# 52. Event Lifecycle
+
+Events should have lifecycles.
+
+Example:
+
+```text
+CREATED
+   ↓
+ACTIVE
+   ↓
+MONITORING
+   ↓
+RESOLVED
+```
+
+Or:
+
+```text
+CREATED
+   ↓
+ACTIVE
+   ↓
+ESCALATED
+   ↓
+RESOLVED
+```
+
+The simulation should occasionally progress existing events rather than continuously generating new ones.
+
+This is critical for realism.
+
+---
+
+# 53. Ticket Lifecycle
+
+Tickets should behave similarly.
+
+```text
+OPEN
+ ↓
+IN_PROGRESS
+ ↓
+WAITING
+ ↓
+IN_PROGRESS
+ ↓
+RESOLVED
+ ↓
+CLOSED
+```
+
+Some tickets should remain open for longer than others.
+
+Some warnings should resolve automatically.
+
+Some should require staff intervention.
+
+---
+
+# 54. Dashboard Update Behaviour
+
+Every simulation tick:
+
+```text
+1. Advance simulation clock.
+
+2. Update telemetry.
+
+3. Progress active routes.
+
+4. Progress deliveries.
+
+5. Inspect existing warnings.
+
+6. Resolve events where appropriate.
+
+7. Escalate events where conditions worsen.
+
+8. Generate new activity.
+
+9. Create tickets when operational conditions require them.
+
+10. Update drivers.
+
+11. Update trucks.
+
+12. Update staff activity.
+
+13. Publish new SimulationState.
+
+14. Dashboard re-renders.
+```
+
+---
+
+# 55. Initial Simulation State
+
+On application startup:
+
+```text
+20–30 trucks
+15–25 drivers
+5–8 staff members
+15–30 events
+5–10 tickets
+8–15 active routes
+```
+
+The exact numbers should be configurable.
+
+The initial state should contain:
+
+```text
+1 potential delay
+0–1 emergency
+multiple normal deliveries
+multiple active routes
+at least one loading operation
+at least one unloading operation
+several open tickets
+multiple online staff members
+```
+
+The initial dashboard must look interesting immediately.
+
+---
+
+# 56. Realistic South African Logistics Context
+
+The simulation should use South African logistics terminology and geography.
+
+Examples:
+
+```text
+N1
+N3
+N12
+M1
+Midrand
+Centurion
+Kempton Park
+Germiston
+Alrode
+Wadeville
+East Rand
+Pretoria
+Johannesburg
+Heidelberg
+Vereeniging
+Rustenburg
+Durban
+```
+
+Use realistic distribution and fleet terminology.
+
+Avoid creating an exaggerated fictional world.
+
+---
+
+# 57. Example Event Dataset
+
+Events should look similar to:
+
+```text
+Brake temperature warning received from PBX-7194
+East Rand delivery running 22 minutes behind schedule
+PBX-4821 departed Midrand Distribution Centre
+Driver Lerato Nkosi arrived at Wadeville customer site
+Delivery PB-84721 completed successfully
+Fuel level below planned threshold on PBX-6317
+Traffic congestion detected on N12 near Germiston
+Loading completed at Johannesburg Central Depot
+Customer delivery window updated for PB-91284
+Driver Johan van der Merwe reported roadside obstruction
+```
+
+Critical events:
+
+```text
+Brake temperature exceeded safe operating threshold
+Vehicle stopped on N3 shoulder
+Driver emergency alert received from PBX-7194
+Mechanical fault detected during active route
+```
+
+---
+
+# 58. Important UI Principle
+
+The dashboard should answer these questions immediately:
+
+```text
+What is happening?
+What needs attention?
+What is going wrong?
+Where is it happening?
+Who is responsible?
+What vehicle is involved?
+What is the current status?
+What happened recently?
+```
+
+The user should not need to open several screens to understand the operational situation.
+
+---
+
+# 59. Animation Rules
+
+Animation should communicate state, not decorate the interface.
+
+Use animation for:
+
+```text
+Emergency alerts
+New events
+Live indicators
+Changing telemetry
+Ticket changes
+Status transitions
+```
+
+Avoid:
+
+```text
+constant bouncing cards
+excessive transitions
+large page animations
+animations that make information difficult to read
+```
+
+Emergency indicators may pulse continuously.
+
+New events can briefly slide/fade into the event feed.
+
+---
+
+# 60. Responsive Behaviour
+
+Desktop is the primary showcase environment.
+
+However, the dashboard should remain usable on:
+
+```text
+1440px+
+1280px
+1024px
+768px
+mobile
+```
+
+Desktop:
+
+```text
+sidebar + multi-column dashboard
+```
+
+Tablet:
+
+```text
+compressed sidebar + two-column dashboard
+```
+
+Mobile:
+
+```text
+stacked operational cards
+```
+
+Emergency information must remain prominent at every breakpoint.
+
+---
+
+# 61. State Ownership Rules
+
+Business state belongs in:
+
+```text
+domain/
+simulation/
+state/
+```
+
+Presentation belongs in:
+
+```text
+components/
+```
+
+Data generation belongs in:
+
+```text
+data/
+simulation/
+```
+
+Formatting belongs in:
+
+```text
+lib/
+```
+
+Do not put simulation logic into React components.
+
+Do not put Tailwind styling logic into domain classes.
+
+Do not create random events directly from EventCard.
+
+---
+
+# 62. AI Modification Rules
+
+When modifying the application:
+
+1. Read this document first.
+
+2. Identify the relevant domain, simulation, state, or component file.
+
+3. Inspect that file before changing it.
+
+4. Follow existing architecture.
+
+5. Do not move business logic into components.
+
+6. Do not duplicate existing utility functions.
+
+7. Do not introduce a new abstraction unless the existing architecture cannot support the requirement.
+
+8. Preserve the simulation lifecycle.
+
+9. Preserve realistic event relationships.
+
+10. Do not replace working architecture with a simpler but less maintainable implementation.
+
+11. Make the smallest change that completely satisfies the requirement.
+
+12. Do not modify unrelated files.
+
+13. Do not invent placeholder data.
+
+14. Do not add comments explaining obvious code.
+
+15. Do not leave TODO comments.
+
+16. Do not create dead UI controls.
+
+17. Do not create buttons that have no meaningful behaviour.
+
+18. After changing the code, verify imports, types, state flow, and affected components.
+
+---
+
+# 63. Context-Efficient AI Development Prompt
+
+Use the following prompt as the persistent instruction when working with an AI coding agent:
+
+```text
+You are maintaining the Logistics Operations Dashboard.
+
+Before making any change:
+
+1. Read the project reference document.
+2. Identify the exact subsystem affected.
+3. Inspect the relevant existing files.
+4. Reuse existing classes, state, utilities and components whenever possible.
+5. Do not rediscover the architecture by reading unrelated files.
+
+ARCHITECTURE:
+
+domain/
+    Business entities and behaviour.
+
+simulation/
+    Simulation engine, clock, event generation and state mutation.
+
+data/
+    Initial realistic logistics entities.
+
+state/
+    React state integration and selectors.
+
+components/
+    Presentation only.
+
+lib/
+    Shared utilities and formatting.
+
+CORE ENTITIES:
+
+LogisticsEvent
+StaffMember
+TruckDriver
+Truck
+Ticket
+
+CORE PRINCIPLE:
+
+The dashboard is a living logistics simulation, not a static mockup.
+
+Events must have realistic relationships and lifecycles.
+
+For example:
+
+traffic -> delay -> ETA change -> warning -> resolution
+
+or:
+
+vehicle fault -> warning -> emergency -> ticket -> assignment -> resolution
+
+Do not generate unrelated random state changes when a causal state transition would be more realistic.
+
+IMPLEMENTATION RULES:
+
+- Use TypeScript.
+- Use Next.js.
+- Use Tailwind CSS.
+- Keep business logic out of React components.
+- Keep presentation logic out of domain classes.
+- Use selectors for derived dashboard data.
+- Centralise randomness.
+- Centralise formatting.
+- Preserve existing state flow.
+- Use real-looking logistics data.
+- Never use placeholder text.
+- Never use Lorem ipsum.
+- Never use "Test", "Sample", "Example" or "Placeholder" entities.
+- Do not add TODO comments.
+- Do not add unnecessary comments.
+- Do not create dead controls.
+- Do not rewrite working systems unnecessarily.
+- Do not change unrelated files.
+
+WHEN GIVEN A CHANGE REQUEST:
+
+First determine:
+
+A. Which domain entity is affected?
+B. Whether the simulation engine is affected.
+C. Whether application state is affected.
+D. Which UI component consumes the resulting state.
+E. Whether a selector or utility already exists for the requirement.
+
+Then make the smallest complete change.
+
+Before finishing:
+
+- Verify TypeScript types.
+- Verify imports.
+- Verify state propagation.
+- Verify affected UI states.
+- Verify emergency/warning/resolved visual behaviour where applicable.
+- Verify the simulation still progresses naturally.
+- Verify no placeholder data was introduced.
+- Verify no unrelated files were modified.
+
+RESPONSE FORMAT:
+
+Before coding, briefly state:
+
+Affected subsystem:
+Files to change:
+Reason:
+
+Then implement the change.
+
+Do not explain the entire project again unless specifically requested.
+Do not reproduce files that were not changed.
+Do not restate this architecture unless the requested change requires architectural modification.
+```
+
+---
+
+# 64. Token-Saving AI Workflow
+
+For future changes, the AI should follow this lookup strategy.
+
+### Request: "Change emergency colours"
+
+Read:
+
+```text
+components/dashboard/EventStatus.tsx
+components/ui/StatusDot.tsx
+```
+
+Do not read:
+
+```text
+simulation/
+data/
+domain/
+```
+
+unless the behaviour itself is changing.
+
+---
+
+### Request: "Make emergencies happen less often"
+
+Read:
+
+```text
+simulation/EventGenerator.ts
+lib/random.ts
+```
+
+Do not inspect dashboard components.
+
+---
+
+### Request: "Add a new vehicle alert"
+
+Read:
+
+```text
+domain/LogisticsEvent.ts
+simulation/EventGenerator.ts
+simulation/EventProcessor.ts
+simulation/scenarios/vehicleScenario.ts
+components/dashboard/EventCard.tsx
+```
+
+Only inspect other files if required by existing imports.
+
+---
+
+### Request: "Add another ticket status"
+
+Read:
+
+```text
+domain/Ticket.ts
+types/
+components/dashboard/TicketCard.tsx
+```
+
+Then search for usages of the ticket status enum/type.
+
+Do not reread the entire project.
+
+---
+
+### Request: "Change the dashboard layout"
+
+Read:
+
+```text
+components/dashboard/Dashboard.tsx
+components/dashboard/OperationsSummary.tsx
+components/dashboard/EventFeed.tsx
+components/dashboard/TruckActivity.tsx
+components/dashboard/TicketPanel.tsx
+```
+
+Do not inspect simulation files unless data requirements change.
+
+---
+
+### Request: "Make the simulation more realistic"
+
+Read:
+
+```text
+simulation/SimulationEngine.ts
+simulation/EventGenerator.ts
+simulation/EventProcessor.ts
+simulation/StateMutator.ts
+simulation/scenarios/*
+```
+
+Then inspect domain classes only where behaviour needs to change.
+
+---
+
+# 65. Definition of Done
+
+The showcase project is considered successful when:
+
+```text
+[ ] Dashboard loads immediately with populated operational data.
+
+[ ] Multiple trucks are active.
+
+[ ] Multiple drivers have current statuses.
+
+[ ] Events appear as cards.
+
+[ ] Events have meaningful statuses.
+
+[ ] Emergencies display a pulsing red indicator.
+
+[ ] Potential delays display orange indicators.
+
+[ ] Resolved events become visually subdued.
+
+[ ] Tickets have priorities and lifecycle states.
+
+[ ] Staff members can be assigned to tickets/events.
+
+[ ] Simulation changes automatically.
+
+[ ] Existing events can progress rather than only new events appearing.
+
+[ ] Trucks change state realistically.
+
+[ ] Drivers change state realistically.
+
+[ ] ETAs can change.
+
+[ ] Delays can resolve.
+
+[ ] Emergencies can escalate and resolve.
+
+[ ] Tickets can be created from operational events.
+
+[ ] Dashboard summary counts update automatically.
+
+[ ] Activity timeline reflects simulation changes.
+
+[ ] The dashboard feels alive without user interaction.
+
+[ ] No placeholder text exists.
+
+[ ] No TODO comments exist.
+
+[ ] No dead buttons exist.
+
+[ ] No business logic is embedded in presentation components.
+
+[ ] TypeScript remains strongly typed.
+
+[ ] The application is responsive.
+
+[ ] Emergency information is immediately visible.
+
+[ ] The codebase remains understandable to another AI agent.
+```
+
+---
+
+# 66. Architectural North Star
+
+The most important design decision is:
+
+```text
+REALISTIC STATE TRANSITIONS
+        >
+RANDOM VISUAL CHANGES
+```
+
+The application should give the impression that an actual logistics organisation is operating behind the interface.
+
+A user should be able to watch the dashboard for several minutes and see:
+
+```text
+trucks depart
+drivers arrive
+deliveries complete
+traffic causes delays
+ETAs change
+warnings appear
+tickets get created
+staff get assigned
+vehicles develop faults
+emergencies escalate
+operations recover
+```
+
+That is what will make the project feel like a serious showcase application rather than a Tailwind dashboard populated with static mock cards.
+
+The UI is the presentation layer.
+
+**The simulation is the product.**
+
+---
+
+# 67. Session 2 Enhancement Requests
+
+The following requests were made after the initial build and have been implemented. They are recorded here for context so future changes remain consistent with them.
+
+## 67.1 Card Insert / Reorder Animation
+
+- New cards (events, trucks, drivers, tickets) must animate in individually rather than appearing abruptly.
+- Existing cards must animate downward/reflow smoothly to make space for a new card at the top of a list.
+- When an existing card is updated (status change, escalation, resolution, reassignment), it should animate to the top of its own section rather than jumping instantly.
+- Implemented using `framer-motion` (`AnimatePresence` + `motion.div layout`) in EventFeed, TruckActivity, DriverActivity, TicketPanel, ActivityTimeline.
+- To support "move to top on update", domain classes (`LogisticsEvent`, `Truck`, `TruckDriver`) track a `lastUpdated` timestamp that refreshes on every mutating method. Lists sort primarily by this recency (with truck/driver activity keeping status-priority as the primary sort and recency as the tiebreaker, and tickets keeping priority as the primary sort with `updatedAt` recency as the tiebreaker).
+
+## 67.2 Working Sidebar Navigation
+
+- The left sidebar navigation (Overview, Live Operations, Fleet, Drivers, Tickets, Events, Reports) must actually switch the dashboard's visible content, not just be decorative links.
+- Implemented as client-side view state (`DashboardView`) in `state/dashboardReducer.ts` / `state/DashboardProvider.tsx`, rather than separate Next.js routes, so the single `SimulationEngine` instance is not torn down/remounted when switching views.
+- `Dashboard.tsx` renders different panel combinations depending on the active view (e.g. Fleet shows full-width Truck Activity, Reports shows Activity Timeline + Ticket Panel).
+
+## 67.3 Managers On Duty (Sidebar)
+
+- A "Managers On Duty" list of 4 managers appears in the left sidebar below the navigation.
+- Each entry shows an avatar, name, department, and an online/offline indicator (green dot = online/busy, grey = away/offline).
+- A mock "Message on Slack" icon button is shown per manager; it only opens a Slack deep link (`slack://user?...`) when the manager is online, and is disabled/greyed out otherwise.
+- `data/staff.ts` exposes `getManagersOnDuty()`, selecting staff members with managerial roles (`FLEET_MANAGER`, `OPERATIONS_MANAGER`, `SUPERVISOR`).
+
+## 67.4 White / Light Theme Template
+
+- A second visual template — a white/light theme — is available as a toggle, in addition to the default dark Tokyo Nights theme.
+- Implemented via CSS custom properties (RGB triplets) in `app/globals.css` under `:root` (dark, default) and `.theme-light` (light override). Tailwind's color tokens (`bg`, `fg`, `accent`, `status`) reference these variables via `rgb(var(--color-x) / <alpha-value>)` so existing component classes work unchanged in both themes.
+- A `ThemeToggle` component (sun/moon icon button) in the top bar toggles the `theme-light` class on `<html>` and persists the choice to `localStorage`.
+- A small inline script in `app/layout.tsx` applies the stored theme class before hydration to avoid a flash of the wrong theme.
+
+## 67.5 World Clocks (Top Bar)
+
+- The top bar displays live clocks for three continents: Johannesburg (Africa), London (Europe), and Dubai (Asia), updating roughly every 30 seconds.
+- Implemented as a client-only `WorldClocks` component using `Intl.DateTimeFormat` with explicit `timeZone` values, rendered inside `TopBar.tsx`.
+
+---
+
+# 68. Session 3 Polish & Bug Fix Requests
+
+The following issues were reported after Session 2's animation/navigation work shipped, and have been implemented. Recorded here for context so future changes remain consistent with them.
+
+## 68.1 Card Stack Height + Collapsible Cards
+
+- Card stacks (Active Operations, Truck Activity, Driver Activity, Open Tickets, Activity Timeline) must never grow taller than the visible browser window — each list scrolls internally instead of pushing the whole page down.
+- Implemented with a `max-h-[65vh] overflow-y-auto` scroll region per panel (class `card-stack` in `app/globals.css`, see 68.3) rather than relying on ambiguous `flex-1`/`h-full` chains.
+- Individual cards (`EventCard`, `TruckCard`, `DriverCard`, `TicketCard`) are now collapsible: they render a compact single-line summary (status + title/registration/name + a chevron) and expand to show full detail (description, location, telemetry, assignment) on click. Cards start collapsed by default so more of the stack is visible at once within the capped height.
+
+## 68.2 Active Operations Header Layout
+
+- The "Active Operations" title previously sat on the same row as the filter tabs (All / Emergencies / Delays / Normal), causing crowding.
+- Fixed by stacking the title above the tab row in `EventFeed.tsx` (title on its own line, tabs wrap below it).
+
+## 68.3 Removed Card Glow Effect
+
+- The `shadow-glow-critical` / `shadow-glow-warning` box-shadow glow on critical/warning `EventCard`s has been removed — it did not read well visually. Cards now rely on border/background tint only for severity emphasis.
+- A `.card-stack { scrollbar-gutter: stable; }` rule was added to `app/globals.css` and applied to all scrollable card-stack containers, reserving space for the scrollbar so cards don't visibly shift in width when a scrollbar appears/disappears during an update.
+
+## 68.4 Delay Indicator Mismatch
+
+- The "Potential Delays" and "Emergencies" tiles in `OperationsSummary` previously counted WARNING/CRITICAL-severity *events* (including vehicle/driver alerts that never change a truck's status), which frequently disagreed with the number of trucks actually shown as `DELAYED`/`EMERGENCY` in the Fleet list.
+- `calculateSummary()` in `simulation/SimulationState.ts` now counts trucks whose `status` is `DELAYED` (Potential Delays) or `EMERGENCY` (Emergencies) directly, so the top indicators always match what's visible in Truck Activity / Fleet view.
+
+## 68.5 Emergencies Float To Top + Reduced Frequency
+
+- `EventFeed.tsx` previously sorted only by recency (`lastUpdated`), so a CRITICAL event could sit below more-recently-touched NORMAL/WARNING events. It now sorts by severity first (CRITICAL, then WARNING, then NORMAL) with recency as the tiebreaker, matching the existing status-priority sort already used by Truck Activity and Driver Activity.
+- Emergency events are now rarer: the `EMERGENCY` generation weight in `simulation/EventGenerator.ts` was reduced (redistributed into `NORMAL`), so fewer emergencies are generated overall.
+
+## 68.6 Reduced Simultaneous Updates
+
+- The simulation tick interval (`simulation/SimulationClock.ts`) was increased so ticks happen less often, giving each animation more time to settle before the next change.
+- The per-tick chance of generating a brand-new event (`SimulationEngine.tick()`) was reduced.
+- `progressExistingEvents()` and `progressTickets()` in `simulation/EventProcessor.ts` now stop after the first mutation per tick instead of looping through every event/ticket and potentially resolving/escalating several at once — this keeps each tick's visible change count small and readable instead of several cards animating simultaneously.
+
+---
+
+# 69. Session 4 Fixes & Driver Location Map
+
+## 69.1 Hydration Mismatch Fix
+
+- A React hydration warning was occurring because the no-flash theme script in `app/layout.tsx` adds a `theme-light` class to `<html>` before React hydrates, which the server-rendered markup does not have.
+- Fixed by adding `suppressHydrationWarning` to the `<html>` element — this is an intentional, expected pre-hydration DOM mutation, not a real mismatch.
+
+## 69.2 Content Shift During Card Animations
+
+- Card stacks were shifting in width whenever a card animated in, reordered, or was removed.
+- Root causes fixed: (1) `framer-motion`'s `layout` prop (full size+position tweening) was replaced with `layout="position"` on all animated cards (Event, Truck, Driver, Ticket, Timeline) so cards no longer apply a scale-correction transform when siblings resize. (2) The outer page (`html`) and the dashboard's scrollable `<main>` region (`components/dashboard/DashboardApp.tsx`) did not reserve space for their scrollbars, so the whole layout narrowed/widened as the page's scrollbar appeared and disappeared on every tick — fixed with `scrollbar-gutter: stable` on both.
+- Cards briefly rendering outside their own card-stack box during reflow was caused by `AnimatePresence mode="popLayout"` positioning the reflowing/exiting card as `position: absolute` relative to the nearest positioned ancestor; none of the card-stack containers had `position: relative`, so a card could pop out relative to a distant ancestor. Fixed by adding `relative` to each card-stack scroll container.
+
+## 69.3 Driver Location Map (Mockup)
+
+- Added a schematic (non-GPS, mockup) network map showing each on-duty driver's current location and delivery destination, visible in the **Drivers** sidebar view above the driver list.
+- `types/logistics.ts` `Location` now carries schematic `x`/`y` percentage coordinates (0–100 / 0–60) used purely for this mock map layout; `data/locations.ts` assigns coordinates to all 16 known locations and exposes `getLocationCoords(name)`.
+- `domain/TruckDriver.ts` now tracks a `destination` field alongside `currentLocation`. `startRoute(destination)` sets it when a driver departs; `arrive(location)`/`completeDelivery(nextDestination)` (reworked in 69.5) keep it accurate as the simulation runs. `simulation/EventProcessor.ts` supplies these values from `DEPARTURE`/`ARRIVAL`/`DELIVERY` events.
+- **Tied into the delay system**: each driver's route line and current-location marker on the map are colour-coded by their live status — blue for on route, amber for delayed, red (pulsing) for emergency, muted/dashed for idle/off-duty — using the same status source as the Truck/Driver Activity cards and the `OperationsSummary` delay/emergency tiles, so the map always agrees with the rest of the dashboard.
+- The `DELAY` event handler in `EventProcessor.ts` now also marks the linked driver `DELAYED` (previously only the truck was marked), and resolving a `WARNING` event now resets the driver back to `ON_ROUTE` as well (previously only the truck was reset) — keeping driver status consistent with truck status for the map and for Driver Activity.
+- Clicking a marker on the map selects that driver and shows a small detail strip (name, truck registration, current → destination, status badge) below the map. New component: `components/dashboard/DriverMap.tsx`.
+
+## 69.4 Driver Routes Redesigned As A Stop List
+
+- The schematic SVG map with drawn lines across a canvas didn't read as realistic, so `components/dashboard/DriverMap.tsx` was redesigned around the same underlying data (coordinates are no longer rendered — `x`/`y` remain in the data model but are unused by this component).
+- New layout: a scrollable driver list on the left (sorted emergency → delayed → on route → idle, click to select) and a route detail panel on the right showing the selected driver's stops as a vertical two-step list — **Current location** and **Next stop** — each labelled with its location type (Depot, Distribution Centre, Customer Site, etc.) from `data/locations.ts`, connected by a coloured line/dot matching the driver's live status tone (info/warning/critical/muted), with a pulsing marker for delayed/emergency drivers.
+- The first driver in the sorted list is auto-selected by default so the route panel is never empty.
+
+## 69.5 Truck/Driver Status & Location Fully Synchronized
+
+- **Root cause 1 (initial data)**: `data/trucks.ts` and `data/drivers.ts` previously picked each linked truck's and driver's `status` and `location` from two independent random pools, so a truck could start `ON_ROUTE` while its driver started `OFF_DUTY`, immediately making the "Trucks on route" summary tile disagree with the Driver Routes list. Fixed: `createDrivers(trucks)` now takes the generated trucks and derives each linked driver's `currentLocation` directly from their truck's `location`, and their `status` from a `truckToDriverStatus` map (`ON_ROUTE`/`LOADING`/`UNLOADING`/`DELAYED`/`EMERGENCY` mirror 1:1; a truck sitting `AVAILABLE` maps to a resting/off-duty driver).
+- **Root cause 2 (ongoing simulation)**: the delivery lifecycle only had two phases (`DEPARTURE`, `DELIVERY`) but three truck states (`LOADING`, `ON_ROUTE`, `UNLOADING`), so an arriving truck moved to `UNLOADING` while `EventProcessor.ts` simultaneously forced its driver straight back to `ON_ROUTE` with a brand-new destination — a permanent mismatch every time a delivery event fired.
+  - Fixed by giving the lifecycle a proper 3-phase loop shared by truck and driver: `LOADING` → (`DEPARTURE` event) → `ON_ROUTE` → (`ARRIVAL` event) → `UNLOADING` → (`DELIVERY` event) → back to `LOADING`. `simulation/scenarios/deliveryScenario.ts` now emits `DEPARTURE` while `LOADING`, `ARRIVAL` while `ON_ROUTE` (previously unused by the generator despite already existing as an `EventType`), and `DELIVERY` while `UNLOADING`.
+  - Added `domain/TruckDriver.ts#arrive(location)` so the driver moves to `UNLOADING` at the same location as the truck (`Truck#arrive`); `completeDelivery(nextDestination)` was simplified to move the driver back to `LOADING` (matching `Truck#startLoading()`) and assign the next destination, instead of incorrectly jumping to `ON_ROUTE`.
+  - Arrival locations are now taken from the driver's own `destination` field (where they were actually headed) instead of a fresh random location, so a truck/driver always "arrive" where they said they were going.
+- Net effect: at every point in the simulation, a truck's status/location and its linked driver's status/location are derived from the same transition and can no longer drift apart, so summary counts (e.g. trucks on route) always match the Driver Routes view.
+
+## 69.6 "Potential Delays" Undercounting Fix
+
+- The "Potential Delays" tile could show 1 even when 2+ trucks were actually `DELAYED`. Root cause: `progressExistingEvents()` in `simulation/EventProcessor.ts` resolved *any* unresolved `WARNING`-severity event (rolling a 15% chance per event per tick) and, whenever it did, reset that event's linked truck/driver back to `ON_ROUTE` if they happened to currently be `DELAYED` — but `VEHICLE_ALERT` and `DRIVER_ALERT` events also use `WARNING` severity and are unrelated to the delay. So resolving an unrelated vehicle/driver alert for a truck that was separately delayed by a real `DELAY` event would silently clear its `DELAYED` status, while the actual `DELAY` event stayed open. The more simultaneous delays/alerts existed, the more often this fired, pulling the visible count back down toward 1.
+
+## 69.7 "Potential Delays" Showing 0 While "Delays" Tab Had Entries
+
+- After 69.6, the tile could still read `0` while the "Delays" tab in Active Operations showed entries. Root cause: `EventFeed.tsx`'s "Delays" tab filtered purely by `event.severity === "WARNING"`, but `VEHICLE_ALERT` and `DRIVER_ALERT` events (e.g. "Tyre pressure warning", "Fuel level below threshold") also use `WARNING` severity despite never touching a truck's `DELAYED` status. These non-delay warnings were filling the "Delays" tab while the `potentialDelays` tile (which only counts trucks whose `status === "DELAYED"`) correctly showed 0, since no truck was actually delayed.
+- Fixed by special-casing the `filterEvents()` logic in `EventFeed.tsx`: when the active tab is `"WARNING"` ("Delays"), it now filters by `event.type === "DELAY"` specifically instead of by severity, so only genuine delay events appear there and the tab always agrees with the summary tile. The "All", "Emergencies", and "Normal" tabs are unaffected.
+- Fixed by only resetting truck/driver status back to `ON_ROUTE` when the event actually being resolved is `event.type === "DELAY"` — resolving a vehicle/driver alert no longer touches delay status. Each delay now only clears when its own `DELAY` event resolves, so the "Potential Delays" tile accurately reflects however many trucks are truly `DELAYED` at once.
